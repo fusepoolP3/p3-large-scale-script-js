@@ -1,0 +1,34 @@
+# Inserts DBpedia subjects and broader categories for the GND-ID into its RDF Graph
+
+# Variable: <http://d-nb.info/gnd/118529692> (should be a parameter)
+# It denotes an RDF Graph in the INSERT statement
+
+# Variable: 118529692 (should be a parameter)
+# It denotes a specific GND-ID being selected from the DBpedia dataset
+
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX gndo: <http://d-nb.info/standards/elementset/gnd#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX nif: <http://persistence.uni-leipzig.org/nlp2rdf/ontologies/nif-core#>
+prefix xsd: <http://www.w3.org/2001/XMLSchema#> 
+PREFIX dbp: <http://dbpedia.org/property/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+INSERT INTO <http://d-nb.info/gnd/118529692> { ?w nif:isString ?subjects . ?w nif:isString ?broaderCats . }
+WHERE {
+   SELECT ?w (group_concat(distinct concat('"',?subjectlb,'"@',lang(?subjectlb)); separator = ", ") AS ?subjects) (group_concat(distinct concat('"',?broaderlb,'"@',lang(?broaderlb)); separator = ", ") AS ?broaderCats)
+   WHERE { 
+      GRAPH <http://de.dbpedia.org> { ?w <http://dbpedia.org/ontology/individualisedGnd> "118529692". 
+                                      optional { ?w dct:subject ?subject . 
+                                                 ?subject rdfs:label ?subjectlb . 
+                                                 ?subject skos:broader ?broader .
+                                                 ?broader rdfs:label ?broaderlb . 
+                                      }
+                                    }
+         } 
+      }
+group by ?w
+LIMIT 500

@@ -1,0 +1,46 @@
+# Insert coocurrent concepts and their distance, for the GND-ID into its RDF Graph
+
+# Variable: <http://d-nb.info/gnd/118529692> (should be a parameter)
+# It denotes both (a) an RDF Graph in the INSERT statement, and (b) a specific GND-ID being selected from the B3Kat dataset
+
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX isbd: <http://iflastandards.info/ns/isbd/elements/>
+PREFIX bibo: <http://purl.org/ontology/bibo/>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX gndo: <http://d-nb.info/standards/elementset/gnd#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX nif: <http://persistence.uni-leipzig.org/nlp2rdf/ontologies/nif-core#>
+prefix xsd:   <http://www.w3.org/2001/XMLSchema#> 
+PREFIX dbp: <http://dbpedia.org/property/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX marcrel: <http://id.loc.gov/vocabulary/relators/>
+PREFIX ex: <http://example.org/x/>
+PREFIX rvk: <http://lod.b3kat.de/rvk/>
+PREFIX gnd: <http://d-nb.info/gnd/>
+PREFIX ddc: <http://dewey.info/class/>
+PREFIX ssg: <http://lod.b3kat.de/ssg/>
+
+INSERT INTO <http://d-nb.info/gnd/118529692> { <http://d-nb.info/gnd/118529692> ex:hasCooc [ ex:closeness ?distance ; ex:uri ?cosubjectUri ] . }
+WHERE {
+	GRAPH <http://lod.b3kat.de/> {
+		SELECT ?cosubjectUri (( ?recordCount * 100.0 / ?totalNumOfRows) as ?distance) 
+
+		WHERE {
+			{ SELECT (count(*) AS ?totalNumOfRows) WHERE { ?r ?p <http://d-nb.info/gnd/118529692> . } }
+			{ SELECT ?cosubjectUri (COUNT(?record) AS ?recordCount) 
+			  WHERE { 
+			     ?record ?p <http://d-nb.info/gnd/118529692> ; 
+			             dct:subject ?cosubjectUri . FILTER (isURI(?cosubjectUri)) 
+				}			
+			}			
+		}
+		GROUP By ?cosubjectUri
+		#GROUP By ?distance
+		ORDER BY DESC(?recordCount)
+		#ORDER BY DESC(?distance)
+	}
+}
+

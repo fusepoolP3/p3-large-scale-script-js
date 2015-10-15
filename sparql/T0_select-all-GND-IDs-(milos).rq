@@ -1,0 +1,7 @@
+# Selects all distinct GND-IDs from the GND graph
+
+SELECT distinct ?gndid
+WHERE { 
+   GRAPH <http://d-nb.info-gnd/> { ?gndid <http://d-nb.info/standards/elementset/gnd#gndIdentifier> ?o }
+}
+ORDER BY ?gndid

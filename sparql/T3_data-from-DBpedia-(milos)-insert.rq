@@ -1,0 +1,13 @@
+# Inserts a DBpedia abstract for the GND-ID into its RDF Graph
+
+# Variable: <http://d-nb.info/gnd/118529692> (should be a parameter)
+# It denotes both (a) an RDF Graph in the INSERT statement, and (b) a specific GND-ID being selected from the GND dataset
+
+PREFIX dbo: <http://dbpedia.org/ontology/>
+
+INSERT INTO <http://d-nb.info/gnd/118529692> { <http://d-nb.info/gnd/118529692> dbo:abstract ?abstr . }
+WHERE { 
+   GRAPH <http://d-nb.info-gnd/> { <http://d-nb.info/gnd/118529692> owl:sameAs ?w. filter regex(str(?w), "dbpedia") }
+   GRAPH <http://de.dbpedia.org> { ?w dbo:abstract ?abstr . }
+}
+LIMIT 500
