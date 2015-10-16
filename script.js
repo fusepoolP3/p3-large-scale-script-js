@@ -193,7 +193,7 @@ function startAsyncQueriesPart1(currentUri) {
     runQuery(query, 'T3');
     // T32 query
     query = replaceAll(queries.T32, staticUri, currentUri);
-    query = replaceURISegments(queries.T32, staticUri, currentUri);
+    query = replaceURISegments(query, staticUri, currentUri);
     runQuery(query, 'T32');
     // T4 query
     query = replaceAll(queries.T4, staticUri, currentUri);
