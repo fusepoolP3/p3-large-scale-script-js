@@ -118,8 +118,9 @@ start();
  * it from file. (The file contains the result of T0 as plain text.) 
  **/
 function start() {
-	console.log('Initializing...');
-    if (RUN_T0) {	
+    console.time('DONE');
+    console.log('Initializing...');
+    if (RUN_T0) {
         queryURIs();
     }
     else {
@@ -147,7 +148,7 @@ function queryURIs() {
     });
 
     request.on('error', function (e) {
-        console.log('FATAL: Request returned with error while querying T0.');
+        console.error('FATAL: Request returned with error while querying T0.');
         process.exit(1);
     });
 
@@ -164,12 +165,12 @@ function readURIs() {
     fs.readFile(filePath, 'utf-8', function (error, data) {
         // if file cannot be read abort with fatal error
         if (error) {
-            console.log('FATAL: Could not read file "' + filePath + '"');
+            console.error('FATAL: Could not read file "' + filePath + '"');
             process.exit(1);
         }
         // if data is empty abort with fatal error
         if (isEmpty(data)) {
-            console.log('FATAL: File is empty "' + filePath + '"');
+            console.error('FATAL: File is empty "' + filePath + '"');
             process.exit(1);
         }
         // set global list of URIs
@@ -192,6 +193,7 @@ function startAsyncQueriesPart1(currentUri) {
     runQuery(query, 'T3');
     // T32 query
     query = replaceAll(queries.T32, staticUri, currentUri);
+    query = replaceURISegments(queries.T32, staticUri, currentUri);
     runQuery(query, 'T32');
     // T4 query
     query = replaceAll(queries.T4, staticUri, currentUri);
@@ -235,7 +237,7 @@ function runQuery(query, queryName) {
             console.log('\t' + queryName + ' done');
         }
         else {
-            console.log('\tERROR: Response returned with status code ' + response.statusCode + ' for query "' + queryName + '"');
+            console.error('\tERROR: Response returned with status code ' + response.statusCode + ' for query "' + queryName + '"');
         }
         // set query ready flag
         readyFlags[queryName] = true;
@@ -244,7 +246,7 @@ function runQuery(query, queryName) {
     });
 
     request.on('error', function (e) {
-        console.log('\tERROR: Request returned with error for query "' + queryName + '"');
+        console.error('\tERROR: Request returned with error for query "' + queryName + '"');
         readyFlags[queryName] = true;
         syncCallback();
     });
@@ -294,20 +296,33 @@ function syncCallback() {
             return;
         }
         else {
-            console.log('DONE');
+            console.timeEnd('DONE');
             process.exit(0);
         }
     }
     // if this is the first run (after T0)
     if (first) {
-		first = false;
-		console.log('START');
-		// get current URI
+        first = false;
+        console.log('START');
+        // get current URI
         var currentUri = URIs[index];
         // start the first group of queries
         startAsyncQueriesPart1(currentUri);
         return;
     }
+}
+
+/**
+ * Replaces the last segment of uri1 with the last
+ * segment of uri2 in the query text. (For query T32.)
+ **/
+function replaceURISegments(query, uri1, uri2) {
+    // get last segment from uri1
+    var str1 = uri1.substr(uri1.lastIndexOf("/") + 1);
+    // get last segment from uri2
+    var str2 = uri2.substr(uri2.lastIndexOf("/") + 1);
+    // replace all
+    return replaceAll(query, str1, str2);
 }
 
 /*********************/
@@ -347,7 +362,7 @@ function getOptions(data) {
 function readQuery(filePath) {
     var data = fs.readFileSync(filePath, 'utf-8');
     if (isEmpty(data)) {
-        console.log('FATAL: File is empty "' + filePath + '"');
+        console.error('FATAL: File is empty "' + filePath + '"');
         process.exit(1);
     }
     // remove comment lines
