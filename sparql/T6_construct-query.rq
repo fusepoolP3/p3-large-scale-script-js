@@ -1,0 +1,4 @@
+# Query data per GND resource.
+# Variable: <http://d-nb.info/gnd/118529692> (should be a parameter)
+
+CONSTRUCT {?s ?p ?o} FROM <http://d-nb.info/gnd/118529692> WHERE {?s ?p ?o}

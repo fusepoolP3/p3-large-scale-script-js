@@ -1,7 +1,3 @@
-http://d-nb.info/gnd/1-2
-http://d-nb.info/gnd/10-3
-http://d-nb.info/gnd/100-4
-http://d-nb.info/gnd/1000-5
 http://d-nb.info/gnd/10000-6
 http://d-nb.info/gnd/10000001-0
 http://d-nb.info/gnd/10000002-2

@@ -67,9 +67,9 @@ var filePaths = {
 
 // if false the script will read the URIs from the data
 // folder using the resultT0, otherwise runs T0
-var RUN_T0 = true;
+var RUN_T0 = false;
 // stored result of T0 query (data folder)
-var resultT0 = 'T0.txt';
+var resultT0 = 'T0_test.txt';
 // global array for storing the list of URIs
 var URIs = new Array();
 // global index for looping through the list of URIs
@@ -212,7 +212,7 @@ function startAsyncQueriesPart1(currentUri) {
  **/
 function startAsyncQueriesPart2(currentUri) {
     // T44DDC query
-    query = replaceAll(queries.T44DDC, staticUri, currentUri);
+    var query = replaceAll(queries.T44DDC, staticUri, currentUri);
     runQuery(query, 'T44DDC');
     // T44GND query
     query = replaceAll(queries.T44GND, staticUri, currentUri);
