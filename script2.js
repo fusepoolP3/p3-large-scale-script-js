@@ -33,6 +33,7 @@ var timeout = 15 * 60 * 1000;
 var formats = {
     JSON: 'application/json',
 	TURTLE: 'text/turtle',
+	RDF: 'application/rdf+xml',
     AUTO: 'auto'
 };
 // parameter that needs to be replaced in the queries
@@ -192,7 +193,7 @@ function postGNDResult(rdf, id) {
         headers: {
 			'Slug': id,
 			'Link': '<http://www.w3.org/ns/ldp#BasicContainer>; rel=\'type\'',
-            'Content-Type': 'text/turtle',
+            'Content-Type': formats.RDF,
             'Content-Length': Buffer.byteLength(rdf)
         }
 	};
