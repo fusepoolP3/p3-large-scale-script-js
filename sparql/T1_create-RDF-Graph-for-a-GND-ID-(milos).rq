@@ -4,6 +4,8 @@
 # Variable: <http://d-nb.info/gnd/118529692> (should be a parameter)
 # It denotes both (a) an RDF Graph in the INSERT statement, and (b) a specific GND-ID being selected from the GND dataset
 
+CLEAR GRAPH <http://d-nb.info/gnd/118529692>
+
 INSERT INTO <http://d-nb.info/gnd/118529692> { <http://d-nb.info/gnd/118529692> ?p ?o }
 WHERE { 
    GRAPH <http://d-nb.info-gnd/> { <http://d-nb.info/gnd/118529692> ?p ?o }
