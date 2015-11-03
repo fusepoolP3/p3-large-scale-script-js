@@ -32,8 +32,9 @@ var timeout = 15 * 60 * 1000;
 // format parameter of sparql requests
 var formats = {
     JSON: 'application/json',
-	TURTLE: 'text/turtle',
-	RDF: 'application/rdf+xml',
+    TURTLE: 'text/turtle',
+    RDF: 'application/rdf+xml',
+	FORM: 'application/x-www-form-urlencoded',
     AUTO: 'auto'
 };
 // parameter that needs to be replaced in the queries
@@ -86,7 +87,7 @@ start();
 function start() {
     console.time('DONE');
     console.log('Initializing...');
-	console.log('START');
+    console.log('START');
     if (RUN_T0) {
         queryURIs();
     }
@@ -150,26 +151,26 @@ function readURIs() {
  * Runs the select query to retrieve results from the sparql endpoint.
  **/
 function getGNDResult(query, id) {
-	console.log((index + 1) + '. <' + id + '>');
+    console.log((index + 1) + '. <' + id + '>');
     var data = getData(query, formats.TURTLE);
     var options = getOptions(data)
     // create HTTP request
     var request = http.request(options, function (response) {
         if (response.statusCode == 200) {
-			var data = '';
-			response.setEncoding('utf8');
-			response.on('data', function(chunk) {
-				data += chunk;
-			});
-			response.on('end', function () {	
-				console.log('\t' + id + ' select done');
-				postGNDResult(data, id);
-			});
+            var data = '';
+            response.setEncoding('utf8');
+            response.on('data', function (chunk) {
+                data += chunk;
+            });
+            response.on('end', function () {
+                console.log('\t' + id + ' select done');
+                postGNDResult(data, id);
+            });
         }
         else {
             console.error('\tERROR: Response returned with status code ' + response.statusCode + ' for ' + id);
-			syncCallback();
-        }  
+            syncCallback();
+        }
     });
 
     request.on('error', function (e) {
@@ -191,12 +192,12 @@ function postGNDResult(rdf, id) {
         path: tldpcPath,
         method: 'POST',
         headers: {
-			'Slug': id,
-			'Link': '<http://www.w3.org/ns/ldp#BasicContainer>; rel=\'type\'',
+            'Slug': id,
+            'Link': '<http://www.w3.org/ns/ldp#BasicContainer>; rel=\'type\'',
             'Content-Type': formats.RDF,
             'Content-Length': Buffer.byteLength(rdf)
         }
-	};
+    };
     // create HTTP request
     var request = http.request(options, function (response) {
         if (response.statusCode == 201) {
@@ -227,10 +228,10 @@ function syncCallback() {
     if (index < URIs.length) {
         // get current URI
         var currentUri = URIs[index];
-		var id = currentUri.substr(currentUri.lastIndexOf('/') + 1);
-		var query = replaceAll(queries.T6, staticUri, currentUri);
-		getGNDResult(query, id);
-		index++;
+        var id = currentUri.substr(currentUri.lastIndexOf('/') + 1);
+        var query = replaceAll(queries.T6, staticUri, currentUri);
+        getGNDResult(query, id);
+        index++;
         return;
     }
     else {
@@ -264,7 +265,7 @@ function getOptions(data) {
         path: sparqlPath,
         method: 'POST',
         headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': formats.FORM,
             'Content-Length': Buffer.byteLength(data)
         }
     };

@@ -26,6 +26,9 @@ var timeout = 15 * 60 * 1000;
 // format parameter of sparql requests
 var formats = {
     JSON: 'application/json',
+    TURTLE: 'text/turtle',
+    RDF: 'application/rdf+xml',
+    FORM: 'application/x-www-form-urlencoded',
     AUTO: 'auto'
 };
 // parameter that needs to be replaced in the queries
@@ -350,7 +353,7 @@ function getOptions(data) {
         path: sparqlPath,
         method: 'POST',
         headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': formats.FORM,
             'Content-Length': Buffer.byteLength(data)
         }
     };
