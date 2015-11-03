@@ -26,7 +26,7 @@ var tldpcHost = 'ulcs.fusepool.info';
 // TLDPC port
 var tldpcPort = '8181';
 // TLDPC path
-var tldpcPath = '/DAV/home/fusepool/ldp/FU_Berlin_Extraction_Pipeline_Container';
+var tldpcPath = '/DAV/home/fusepool/ldp/FU_Berlin_Extraction_Pipeline_Container/';
 // timeout parameter of sparql requests (15 mins)
 var timeout = 15 * 60 * 1000;
 // format parameter of sparql requests
@@ -193,9 +193,7 @@ function postGNDResult(rdf, id) {
         method: 'POST',
         headers: {
             'Slug': id + '.ttl',
-            //'Link': '<http://www.w3.org/ns/ldp#BasicContainer>; rel=\'type\'',
-            'Content-Type': formats.TURTLE,
-            'Content-Length': Buffer.byteLength(rdf)
+            'Content-Type': formats.TURTLE
         }
     };
     // create HTTP request
