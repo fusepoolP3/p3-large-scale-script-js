@@ -192,9 +192,9 @@ function postGNDResult(rdf, id) {
         path: tldpcPath,
         method: 'POST',
         headers: {
-            'Slug': id,
-            'Link': '<http://www.w3.org/ns/ldp#BasicContainer>; rel=\'type\'',
-            'Content-Type': formats.RDF,
+            'Slug': id + '.ttl',
+            //'Link': '<http://www.w3.org/ns/ldp#BasicContainer>; rel=\'type\'',
+            'Content-Type': formats.TURTLE,
             'Content-Length': Buffer.byteLength(rdf)
         }
     };
