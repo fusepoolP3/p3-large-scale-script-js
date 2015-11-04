@@ -1,0 +1,7 @@
+# Clears RDF triples from the RDF Graph for the specific GND-ID.
+# The RDF Graph IRI is the same as the GND-ID
+
+# Variable: <http://d-nb.info/gnd/118529692> (should be a parameter)
+# It denotes both (a) an RDF Graph in the INSERT statement, and (b) a specific GND-ID being selected from the GND dataset
+
+CLEAR GRAPH <http://d-nb.info/gnd/118529692>

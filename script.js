@@ -10,6 +10,8 @@ var path = require('path');
 var http = require('http');
 // module for dealing with query strings
 var querystring = require('querystring');
+// module for reading console input
+var readline = require('readline');
 
 /*************************/
 /** Declaring constants **/
@@ -21,6 +23,12 @@ var sparqlHost = 'ulcs.fusepool.info';
 var sparqlPort = '8890';
 // sparql endpoint path
 var sparqlPath = '/sparql';
+// sparql username for authentication
+var sparqlUser = '';
+// sparql password for authentication
+var sparqlPass = '';
+// basic auth header for sparql
+var basicAuth = '';
 // timeout parameter of sparql requests (15 mins)
 var timeout = 15 * 60 * 1000;
 // format parameter of sparql requests
@@ -38,6 +46,7 @@ var resourceFolder = 'sparql';
 // file names
 var files = {
     T0: 'T0_select-all-GND-IDs-(milos).rq',
+    T02: 'T0-2_clear-RDF-Graph-for-a-GND-ID-(milos).rq',
     T1: 'T1_create-RDF-Graph-for-a-GND-ID-(milos).rq',
     T3: 'T3_data-from-DBpedia-(milos)-insert.rq',
     T32: 'T3-2_textsDBpedia-incl-subjects+categories-(carl+milos)-insert.rq',
@@ -52,6 +61,7 @@ var files = {
 // relative file paths
 var filePaths = {
     T0: path.join(__dirname, resourceFolder, files.T0),
+    T02: path.join(__dirname, resourceFolder, files.T02),
     T1: path.join(__dirname, resourceFolder, files.T1),
     T3: path.join(__dirname, resourceFolder, files.T3),
     T32: path.join(__dirname, resourceFolder, files.T32),
@@ -69,10 +79,10 @@ var filePaths = {
 /********************/
 
 // if false the script will read the URIs from the data
-// folder using the resultT0, otherwise runs T0
-var RUN_T0 = false;
+// folder using the resultT0, otherwise runs T0 (from console input)
+var RUN_T0;
 // stored result of T0 query (data folder)
-var resultT0 = 'T0_test.txt';
+var resultT0 = 'T0_run.txt';
 // global array for storing the list of URIs
 var URIs = new Array();
 // global index for looping through the list of URIs
@@ -82,6 +92,7 @@ var first = true;
 // flags for synchronization
 var readyFlags = {
     T0: false,
+    T02: false,
     T1: false,
     T3: false,
     T32: false,
@@ -96,6 +107,7 @@ var readyFlags = {
 // sparql queries read from file
 var queries = {
     T0: readQuery(filePaths.T0),
+    T02: readQuery(filePaths.T02),
     T1: readQuery(filePaths.T1),
     T3: readQuery(filePaths.T3),
     T32: readQuery(filePaths.T32),
@@ -109,11 +121,35 @@ var queries = {
 };
 
 // STARTING SCRIPT
-start();
+initialize();
 
 /********************/
 /** Main functions **/
 /********************/
+
+/**
+ * Get user inputs before starting execution.
+ */
+function initialize() {
+    console.log('\n---== Starting Script ==---');
+    var rl = readline.createInterface({input: process.stdin, output: process.stdout});
+
+    console.log('\nPlease provide credential for "' + sparqlHost + ':' + sparqlPort + sparqlPath + '" for basic HTTP authentication!');
+    // get credentials from console input
+    rl.question('Username: ', function (answer1) {
+        sparqlUser = answer1;
+        rl.question('Password: ', function (answer2) {
+            sparqlPass = answer2;
+            // run T0 from query or from file
+            console.log('\nDo you want to execute T0 query? (If not the script will use the results in "' + resultT0 + '" file!)');
+            rl.question('Run T0? (y/n): ', function (answer3) {
+                RUN_T0 = (answer3 == 'y' || answer3 == 'Y') ? true : false;
+                rl.close();
+                start();
+            });
+        });
+    });
+}
 
 /**
  * Starts the script by getting the list of URIs either
@@ -121,12 +157,14 @@ start();
  * it from file. (The file contains the result of T0 as plain text.) 
  **/
 function start() {
-    console.time('DONE');
-    console.log('Initializing...');
+    console.time('Execution time');
+    basicAuth = 'Basic ' + new Buffer(sparqlUser + ':' + sparqlPass).toString('base64');
     if (RUN_T0) {
+        console.log('\nExecuting T0 query...');
         queryURIs();
     }
     else {
+        console.log('\nReading "' + resultT0 + '" file...');
         readURIs();
     }
 }
@@ -183,11 +221,21 @@ function readURIs() {
 }
 
 /**
+ * Replaces the static URI in the query and starts the first
+ * it asynchronously. (Clear query.)
+ **/
+function startAsyncQueriesPart0(currentUri) {
+    console.log((index + 1) + '. <' + currentUri + '>');
+    // T0-2 query
+    var query = replaceAll(queries.T02, staticUri, currentUri);
+    runQuery(query, 'T02');
+}
+
+/**
  * Replaces the static URI in the queries and starts the first
  * group asynchronously.
  **/
 function startAsyncQueriesPart1(currentUri) {
-    console.log((index + 1) + '. <' + currentUri + '>');
     // T1 query
     var query = replaceAll(queries.T1, staticUri, currentUri);
     runQuery(query, 'T1');
@@ -263,6 +311,16 @@ function runQuery(query, queryName) {
  * the first and second group of queries from running concurrently.
  **/
 function syncCallback() {
+    // if the first query have finished call the first group with the same URI (clear query)
+    if (readyFlags['T02']) {
+        // reset ready flags
+        readyFlags['T02'] = false;
+        // get current URI
+        var currentUri = URIs[index];
+        // start the second group of queries
+        startAsyncQueriesPart1(currentUri);
+        return;
+    }
     // if all queries have finished in the first group call the second group with the same URI
     if (readyFlags['T1'] && readyFlags['T3'] && readyFlags['T32'] && readyFlags['T4'] && readyFlags['T43'] && readyFlags['T5']) {
         // reset ready flags
@@ -272,7 +330,6 @@ function syncCallback() {
         readyFlags['T4'] = false;
         readyFlags['T43'] = false;
         readyFlags['T5'] = false;
-
         // get current URI
         var currentUri = URIs[index];
         // start the second group of queries
@@ -286,31 +343,29 @@ function syncCallback() {
         readyFlags['T44GND'] = false;
         readyFlags['T44RVK'] = false;
         readyFlags['T44SSG'] = false;
-
         // increase global index
         index++;
-
         // go to the next URI if there is any
         if (index < URIs.length) {
             // get current URI
             var currentUri = URIs[index];
             // start the first group of queries
-            startAsyncQueriesPart1(currentUri);
+            startAsyncQueriesPart0(currentUri);
             return;
         }
         else {
-            console.timeEnd('DONE');
+            console.timeEnd('Execution time');
             process.exit(0);
         }
     }
     // if this is the first run (after T0)
     if (first) {
         first = false;
-        console.log('START');
+        console.log('Iterate through each GND-ID...');
         // get current URI
         var currentUri = URIs[index];
         // start the first group of queries
-        startAsyncQueriesPart1(currentUri);
+        startAsyncQueriesPart0(currentUri);
         return;
     }
 }
@@ -353,6 +408,7 @@ function getOptions(data) {
         path: sparqlPath,
         method: 'POST',
         headers: {
+            'Authorization': basicAuth,
             'Content-Type': formats.FORM,
             'Content-Length': Buffer.byteLength(data)
         }

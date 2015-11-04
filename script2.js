@@ -10,6 +10,8 @@ var path = require('path');
 var http = require('http');
 // module for dealing with query strings
 var querystring = require('querystring');
+// module for reading console input
+var readline = require('readline');
 
 /*************************/
 /** Declaring constants **/
@@ -34,7 +36,7 @@ var formats = {
     JSON: 'application/json',
     TURTLE: 'text/turtle',
     RDF: 'application/rdf+xml',
-	FORM: 'application/x-www-form-urlencoded',
+    FORM: 'application/x-www-form-urlencoded',
     AUTO: 'auto'
 };
 // parameter that needs to be replaced in the queries
@@ -56,10 +58,10 @@ var filePaths = {
 /********************/
 
 // if false the script will read the URIs from the data
-// folder using the resultT0, otherwise runs T0
-var RUN_T0 = false;
+// folder using the resultT0, otherwise runs T0 (from console input)
+var RUN_T0;
 // stored result of T0 query (data folder)
-var resultT0 = 'T0_test.txt';
+var resultT0 = 'T0_run.txt';
 // global array for storing the list of URIs
 var URIs = new Array();
 // global index for looping through the list of URIs
@@ -73,11 +75,26 @@ var queries = {
 };
 
 // STARTING SCRIPT
-start();
+initialize();
 
 /********************/
 /** Main functions **/
 /********************/
+
+/**
+ * Get user inputs before starting execution.
+ */
+function initialize() {
+    console.log('\n---== Starting Script ==---');
+    var rl = readline.createInterface({input: process.stdin, output: process.stdout});
+    // run T0 from query or from file
+    console.log('\nDo you want to execute T0 query? (If not the script will use the results in "' + resultT0 + '" file!)');
+    rl.question('Run T0? (y/n): ', function (answer3) {
+        RUN_T0 = (answer3 == 'y' || answer3 == 'Y') ? true : false;
+        rl.close();
+        start();
+    });
+}
 
 /**
  * Starts the script by getting the list of URIs either
@@ -85,13 +102,13 @@ start();
  * it from file. (The file contains the result of T0 as plain text.) 
  **/
 function start() {
-    console.time('DONE');
-    console.log('Initializing...');
-    console.log('START');
+    console.time('Execution time');
     if (RUN_T0) {
+        console.log('\nExecuting T0 query...');
         queryURIs();
     }
     else {
+        console.log('\nReading "' + resultT0 + '" file...');
         readURIs();
     }
 }
@@ -150,8 +167,9 @@ function readURIs() {
 /**
  * Runs the select query to retrieve results from the sparql endpoint.
  **/
-function getGNDResult(query, id) {
-    console.log((index + 1) + '. <' + id + '>');
+function getGNDResult(query, currentUri) {
+	var id = currentUri.substr(currentUri.lastIndexOf('/') + 1);
+    console.log((index + 1) + '. <' + currentUri + '>');
     var data = getData(query, formats.TURTLE);
     var options = getOptions(data)
     // create HTTP request
@@ -193,7 +211,8 @@ function postGNDResult(rdf, id) {
         method: 'POST',
         headers: {
             'Slug': id + '.ttl',
-            'Content-Type': formats.TURTLE
+            'Content-Type': formats.TURTLE,
+            'Content-Length': Buffer.byteLength(rdf)
         }
     };
     // create HTTP request
@@ -225,15 +244,14 @@ function syncCallback() {
     // go to the next URI if there is any
     if (index < URIs.length) {
         // get current URI
-        var currentUri = URIs[index];
-        var id = currentUri.substr(currentUri.lastIndexOf('/') + 1);
+        var currentUri = URIs[index];      
         var query = replaceAll(queries.T6, staticUri, currentUri);
-        getGNDResult(query, id);
+        getGNDResult(query, currentUri);
         index++;
         return;
     }
     else {
-        console.timeEnd('DONE');
+        console.timeEnd('Execution time');
         process.exit(0);
     }
 }
