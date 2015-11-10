@@ -92,7 +92,7 @@ var globalIndex = 0;
 // global variable to indicate first cycle after T0
 var first = true;
 // limit for T0
-var limit = 10;
+var limit = 1000;
 // global offset for T0
 var offset = 0;
 // flags for synchronization
