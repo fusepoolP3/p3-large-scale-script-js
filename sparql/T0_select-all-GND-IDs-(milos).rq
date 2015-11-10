@@ -1,7 +1,17 @@
 # Selects all distinct GND-IDs from the GND graph
 
-SELECT distinct ?gndid
-WHERE { 
-   GRAPH <http://d-nb.info-gnd/> { ?gndid <http://d-nb.info/standards/elementset/gnd#gndIdentifier> ?o }
+# Variable: <offset> (should be a parameter)
+# Variable: <limit> (should be a parameter)
+
+SELECT ?gndid
+WHERE {
+	{
+		SELECT distinct ?gndid
+		WHERE { 
+		   GRAPH <http://d-nb.info-gnd/> { ?gndid <http://d-nb.info/standards/elementset/gnd#gndIdentifier> ?o }
+		}
+		ORDER BY ?gndid
+	}
 }
-ORDER BY ?gndid
+OFFSET <offset>
+LIMIT <limit>

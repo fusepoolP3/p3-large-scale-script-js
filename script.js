@@ -85,10 +85,16 @@ var RUN_T0;
 var resultT0 = 'T0_run.txt';
 // global array for storing the list of URIs
 var URIs = new Array();
-// global index for looping through the list of URIs
+// local index for looping through the list of URIs
 var index = 0;
+// global index for looping through the list of URIs
+var globalIndex = 0;
 // global variable to indicate first cycle after T0
 var first = true;
+// limit for T0
+var limit = 10;
+// global offset for T0
+var offset = 0;
 // flags for synchronization
 var readyFlags = {
     T0: false,
@@ -173,7 +179,12 @@ function start() {
  * Gets all the URIs using the T0 query.
  **/
 function queryURIs() {
-    var data = getData(queries.T0, formats.JSON);
+    var query = replaceAll(queries.T0, '<offset>', offset);
+    query = replaceAll(query, '<limit>', limit);
+    // empty array
+    URIs = new Array();
+    // get POST data
+    var data = getData(query, formats.JSON);
     var options = getOptions(data)
     // create HTTP request
     var request = http.request(options, function (response) {
@@ -184,6 +195,8 @@ function queryURIs() {
             for (var i = 0; i < json.length; i++) {
                 URIs.push(json[i].gndid.value);
             }
+            // indicate first cycle after T0
+            first = true;
             syncCallback();
         });
     });
@@ -225,7 +238,7 @@ function readURIs() {
  * it asynchronously. (Clear query.)
  **/
 function startAsyncQueriesPart0(currentUri) {
-    console.log((index + 1) + '. <' + currentUri + '>');
+    console.log((globalIndex + 1) + '. <' + currentUri + '>');
     // T0-2 query
     var query = replaceAll(queries.T02, staticUri, currentUri);
     runQuery(query, 'T02');
@@ -343,8 +356,10 @@ function syncCallback() {
         readyFlags['T44GND'] = false;
         readyFlags['T44RVK'] = false;
         readyFlags['T44SSG'] = false;
-        // increase global index
+        // increase index
         index++;
+        // increase global index
+        globalIndex++;
         // go to the next URI if there is any
         if (index < URIs.length) {
             // get current URI
@@ -354,8 +369,23 @@ function syncCallback() {
             return;
         }
         else {
-            console.timeEnd('Execution time');
-            process.exit(0);
+            if (RUN_T0) {
+                if (URIs.length > 0) {
+                    index = 0;
+                    // increase offset for T0
+                    offset += limit;
+                    console.log('Executing T0 query...');
+                    queryURIs();
+                }
+                else {
+                    console.timeEnd('Execution time');
+                    process.exit(0);
+                }
+            }
+            else {
+                console.timeEnd('Execution time');
+                process.exit(0);
+            }
         }
     }
     // if this is the first run (after T0)
