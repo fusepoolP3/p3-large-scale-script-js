@@ -58,10 +58,14 @@ var filePaths = {
 /********************/
 
 // if false the script will read the URIs from the data
-// folder using the resultT0, otherwise runs T0 (from console input)
+// folder using the resultFolder, otherwise runs T0 (from console input)
 var RUN_T0;
 // stored result of T0 query (data folder)
-var resultT0 = 'T0_run.txt';
+var resultFolder = './data/T0_all/';
+// list of result files
+var resultFiles = fs.readdirSync(resultFolder);
+// current result file
+var fileIndex = 0;
 // global array for storing the list of URIs
 var URIs = new Array();
 // local index for looping through the list of URIs
@@ -94,7 +98,7 @@ function initialize() {
     console.log('\n---== Starting Script ==---');
     var rl = readline.createInterface({input: process.stdin, output: process.stdout});
     // run T0 from query or from file
-    console.log('\nDo you want to execute T0 query? (If not the script will use the results in "' + resultT0 + '" file!)');
+    console.log('\nDo you want to execute T0 query? (If not the script will use the results in "' + resultFolder + '" folder!)');
     rl.question('Run T0? (y/n): ', function (answer3) {
         RUN_T0 = (answer3 == 'y' || answer3 == 'Y') ? true : false;
         rl.close();
@@ -114,7 +118,7 @@ function start() {
         queryURIs();
     }
     else {
-        console.log('\nReading "' + resultT0 + '" file...');
+        console.log('\nReading "' + resultFiles[fileIndex] + '" file...');
         readURIs();
     }
 }
@@ -158,7 +162,9 @@ function queryURIs() {
  * Reads all the URIs from file. (Result of T0.)
  **/
 function readURIs() {
-    var filePath = path.join(__dirname, '/data', resultT0);
+    var filePath = path.join(resultFolder, resultFiles[fileIndex]);
+    // empty array
+    URIs = new Array();
     // read file asynchronously
     fs.readFile(filePath, 'utf-8', function (error, data) {
         // if file cannot be read abort with fatal error
@@ -173,6 +179,8 @@ function readURIs() {
         }
         // set global list of URIs
         URIs = data.split('\r\n');
+        // indicate first cycle after T0
+        first = true;
         syncCallback();
     });
 }
@@ -281,8 +289,17 @@ function syncCallback() {
             }
         }
         else {
-            console.timeEnd('Execution time');
-            process.exit(0);
+            if (fileIndex < resultFiles.length - 1) {
+                index = 0;
+                // increase file index
+                fileIndex++;
+                console.log('\nReading "' + resultFiles[fileIndex] + '" file...');
+                readURIs();
+            }
+            else {
+                console.timeEnd('Execution time');
+                process.exit(0);
+            }
         }
     }
 }
