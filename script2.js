@@ -12,6 +12,8 @@ var http = require('http');
 var querystring = require('querystring');
 // module for reading console input
 var readline = require('readline');
+// module for handling raw data
+require('buffer');
 
 /*************************/
 /** Declaring constants **/
@@ -74,10 +76,16 @@ var index = 0;
 var globalIndex = 0;
 // global variable to indicate first cycle after T0
 var first = true;
-// limit for T0
+// limit for T0 query
 var limit = 1000;
 // global offset for T0
 var offset = 0;
+// limit how many results is sent in one post
+var postLimit = 100;
+// current post index
+var postIndex = 0;
+// body of the post
+var postBody = '';
 // sparql queries read from file
 var queries = {
     T0: readQuery(filePaths.T0),
@@ -203,7 +211,14 @@ function getGNDResult(query, currentUri) {
             });
             response.on('end', function () {
                 console.log('\t' + id + ' select done');
-                postGNDResult(data, id);
+				postBody += data + '\n';
+				postIndex++;
+				if(postIndex >= postLimit){
+					postGNDResult();
+				}
+				else{
+					syncCallback();
+				}
             });
         }
         else {
@@ -224,36 +239,37 @@ function getGNDResult(query, currentUri) {
 /**
  * Posts the selected results to the TLDPC.
  **/
-function postGNDResult(rdf, id) {
+function postGNDResult() {
     var options = {
         host: tldpcHost,
         port: tldpcPort,
         path: tldpcPath,
         method: 'POST',
         headers: {
-            'Slug': id + '.ttl',
+            'Slug': (globalIndex - postIndex + 1) + '-' + globalIndex + '.ttl',
             'Content-Type': formats.TURTLE,
-            'Content-Length': Buffer.byteLength(rdf)
+            'Content-Length': Buffer.byteLength(postBody)
         }
     };
     // create HTTP request
     var request = http.request(options, function (response) {
         if (response.statusCode == 201) {
-            console.log('\t' + id + ' insert done');
+            console.log('\nPosting results from ' + (globalIndex - postIndex + 1) + ' to ' + globalIndex + '\n');
         }
         else {
-            console.error('\tERROR: Response returned with status code ' + response.statusCode + ' for ' + id);
+            console.error('\nERROR: Response returned with status code ' + response.statusCode + '\n');
         }
-        // synchronize with other threads
-        syncCallback();
+		
+		postBody = '';
+		postIndex = 0;
+		syncCallback();
     });
 
     request.on('error', function (e) {
-        console.error('\tERROR: Request returned with error for ' + id);
-        syncCallback();
+        console.error('\nERROR: Request returned with error for POST\n');
     });
 
-    request.write(rdf);
+    request.write(postBody);
     request.end();
 }
 
@@ -297,8 +313,13 @@ function syncCallback() {
                 readURIs();
             }
             else {
-                console.timeEnd('Execution time');
-                process.exit(0);
+				if(postIndex > 0){
+					postGNDResult();
+				}
+				else{
+					console.timeEnd('Execution time');
+					process.exit(0);
+				}
             }
         }
     }
