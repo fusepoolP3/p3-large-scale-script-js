@@ -186,7 +186,9 @@ function readURIs() {
             process.exit(1);
         }
         // set global list of URIs
-        URIs = data.split('\r\n');
+        URIs = data.split('\n');
+		// clean array
+		URIs = cleanArray(URIs);
         // indicate first cycle after T0
         first = true;
         syncCallback();
@@ -388,4 +390,17 @@ function isEmpty(data) {
         return true;
     }
     return false;
+}
+
+/**
+ * Remove empty elements from array.
+ **/
+function cleanArray(actual) {
+  var newArray = new Array();
+  for (var i = 0; i < actual.length; i++) {
+    if (actual[i]) {
+      newArray.push(actual[i]);
+    }
+  }
+  return newArray;
 }
