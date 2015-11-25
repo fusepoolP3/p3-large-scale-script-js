@@ -1,0 +1,41 @@
+# Inserts a DBpedia abstract for the GND-ID into its RDF Graph
+
+# Variable: <http://d-nb.info/gnd/118529692> (should be a parameter)
+# It denotes both (a) an RDF Graph in the INSERT statement, and (b) a specific GND-ID being selected from the GND dataset
+
+PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX gndo: <http://d-nb.info/standards/elementset/gnd#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+INSERT INTO <http://d-nb.info/gnd/118529692> {
+  <http://d-nb.info/gnd/118529692> dbo:abstract ?abstr ;
+  dbo:thumbnail ?thumb ;
+  dcterms:subject ?subject ;
+  rdfs:comment ?comment ;
+  foaf:depiction ?thumb ;
+  dbo:wikiPageRedirects ?syn .
+}
+FROM <http://d-nb.info-gnd/>
+FROM <http://de.dbpedia.org>
+WHERE {
+  {
+    <http://d-nb.info/gnd/118529692> owl:sameAs ?w . filter regex(str(?w), "dbpedia") .
+    OPTIONAL { ?w dbo:abstract ?abstr . }
+    OPTIONAL { ?w dct:subject ?sub . ?sub rdfs:label ?subject . }
+    OPTIONAL { ?w rdfs:comment ?comment . }
+    OPTIONAL { ?w foaf:depiction ?thumb . }
+    OPTIONAL { ?w dbo:wikiPageRedirects ?sy . ?sy rdfs:label ?syn }
+  }
+  UNION
+  {
+    ?w dbo:individualisedGnd "118529692" . filter regex(str(?w), "dbpedia") .
+    OPTIONAL { ?w dbo:abstract ?abstr . }
+    OPTIONAL { ?w dct:subject ?sub . ?sub rdfs:label ?subject . }
+    OPTIONAL { ?w rdfs:comment ?comment . }
+    OPTIONAL { ?w foaf:depiction ?thumb . }
+    OPTIONAL { ?w dbo:wikiPageRedirects ?sy . ?sy rdfs:label ?syn }
+  }
+}
+LIMIT 500

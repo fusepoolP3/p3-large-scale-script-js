@@ -46,32 +46,12 @@ var resourceFolder = 'sparql';
 // file names
 var files = {
     T0: 'T0_select-all-GND-IDs-(milos).rq',
-    T02: 'T0-2_clear-RDF-Graph-for-a-GND-ID-(milos).rq',
-    T1: 'T1_create-RDF-Graph-for-a-GND-ID-(milos).rq',
-    T3: 'T3_data-from-DBpedia-(milos)-insert.rq',
-    T32: 'T3-2_textsDBpedia-incl-subjects+categories-(carl+milos)-insert.rq',
-    T4: 'T4_coocConcepts-(milos)-insert.rq',
-    T43: 'T4-3_coocConcepts_w-distance-(milos)-insert.rq',
-    T44DDC: 'T4-4_coocConcepts_w-distance-add-type-DDC-(milos)-insert.rq',
-    T44GND: 'T4-4_coocConcepts_w-distance-add-type-GND-(milos)-insert.rq',
-    T44RVK: 'T4-4_coocConcepts_w-distance-add-type-RVK-(milos)-insert.rq',
-    T44SSG: 'T4-4_coocConcepts_w-distance-add-type-SSG-(milos)-insert.rq',
-    T5: 'T5_getTitlesByConcept-(milos)-insert.rq'
+    T3: 'T3-new_data-from-DBpedia-(milos)-insert.rq'
 };
 // relative file paths
 var filePaths = {
     T0: path.join(__dirname, resourceFolder, files.T0),
-    T02: path.join(__dirname, resourceFolder, files.T02),
-    T1: path.join(__dirname, resourceFolder, files.T1),
-    T3: path.join(__dirname, resourceFolder, files.T3),
-    T32: path.join(__dirname, resourceFolder, files.T32),
-    T4: path.join(__dirname, resourceFolder, files.T4),
-    T43: path.join(__dirname, resourceFolder, files.T43),
-    T44DDC: path.join(__dirname, resourceFolder, files.T44DDC),
-    T44GND: path.join(__dirname, resourceFolder, files.T44GND),
-    T44RVK: path.join(__dirname, resourceFolder, files.T44RVK),
-    T44SSG: path.join(__dirname, resourceFolder, files.T44SSG),
-    T5: path.join(__dirname, resourceFolder, files.T5)
+    T3: path.join(__dirname, resourceFolder, files.T3)
 };
 
 /********************/
@@ -102,32 +82,12 @@ var offset = 0;
 // flags for synchronization
 var readyFlags = {
     T0: false,
-    T02: false,
-    T1: false,
-    T3: false,
-    T32: false,
-    T4: false,
-    T43: false,
-    T44DDC: false,
-    T44GND: false,
-    T44RVK: false,
-    T44SSG: false,
-    T5: false
+    T3: false
 };
 // sparql queries read from file
 var queries = {
     T0: readQuery(filePaths.T0),
-    T02: readQuery(filePaths.T02),
-    T1: readQuery(filePaths.T1),
-    T3: readQuery(filePaths.T3),
-    T32: readQuery(filePaths.T32),
-    T4: readQuery(filePaths.T4),
-    T43: readQuery(filePaths.T43),
-    T44DDC: readQuery(filePaths.T44DDC),
-    T44GND: readQuery(filePaths.T44GND),
-    T44RVK: readQuery(filePaths.T44RVK),
-    T44SSG: readQuery(filePaths.T44SSG),
-    T5: readQuery(filePaths.T5)
+    T3: readQuery(filePaths.T3)
 };
 
 // STARTING SCRIPT
@@ -245,58 +205,14 @@ function readURIs() {
 
 /**
  * Replaces the static URI in the query and starts the first
- * it asynchronously. (Clear query.)
+ * it asynchronously.
  **/
-function startAsyncQueriesPart0(currentUri) {
+function startAsyncQueries(currentUri) {
     console.log((globalIndex + 1) + '. <' + currentUri + '>');
-    // T0-2 query
-    var query = replaceAll(queries.T02, staticUri, currentUri);
-    runQuery(query, 'T02');
-}
-
-/**
- * Replaces the static URI in the queries and starts the first
- * group asynchronously.
- **/
-function startAsyncQueriesPart1(currentUri) {
-    // T1 query
-    var query = replaceAll(queries.T1, staticUri, currentUri);
-    runQuery(query, 'T1');
     // T3 query
     query = replaceAll(queries.T3, staticUri, currentUri);
-    runQuery(query, 'T3');
-    // T32 query
-    query = replaceAll(queries.T32, staticUri, currentUri);
     query = replaceURISegments(query, staticUri, currentUri);
-    runQuery(query, 'T32');
-    // T4 query
-    query = replaceAll(queries.T4, staticUri, currentUri);
-    runQuery(query, 'T4');
-    // T43 query
-    query = replaceAll(queries.T43, staticUri, currentUri);
-    runQuery(query, 'T43');
-    // T5 query
-    query = replaceAll(queries.T5, staticUri, currentUri);
-    runQuery(query, 'T5');
-}
-
-/**
- * Replaces the static URI in the queries and starts the second
- * group asynchronously.
- **/
-function startAsyncQueriesPart2(currentUri) {
-    // T44DDC query
-    var query = replaceAll(queries.T44DDC, staticUri, currentUri);
-    runQuery(query, 'T44DDC');
-    // T44GND query
-    query = replaceAll(queries.T44GND, staticUri, currentUri);
-    runQuery(query, 'T44GND');
-    // T44RVK query
-    query = replaceAll(queries.T44RVK, staticUri, currentUri);
-    runQuery(query, 'T44RVK');
-    // T44SSG query	
-    query = replaceAll(queries.T44SSG, staticUri, currentUri);
-    runQuery(query, 'T44SSG');
+    runQuery(query, 'T3');
 }
 
 /**
@@ -334,38 +250,9 @@ function runQuery(query, queryName) {
  * the first and second group of queries from running concurrently.
  **/
 function syncCallback() {
-    // if the first query have finished call the first group with the same URI (clear query)
-    if (readyFlags['T02']) {
+    if (readyFlags['T3']) {
         // reset ready flags
-        readyFlags['T02'] = false;
-        // get current URI
-        var currentUri = URIs[index];
-        // start the second group of queries
-        startAsyncQueriesPart1(currentUri);
-        return;
-    }
-    // if all queries have finished in the first group call the second group with the same URI
-    if (readyFlags['T1'] && readyFlags['T3'] && readyFlags['T32'] && readyFlags['T4'] && readyFlags['T43'] && readyFlags['T5']) {
-        // reset ready flags
-        readyFlags['T1'] = false;
         readyFlags['T3'] = false;
-        readyFlags['T32'] = false;
-        readyFlags['T4'] = false;
-        readyFlags['T43'] = false;
-        readyFlags['T5'] = false;
-        // get current URI
-        var currentUri = URIs[index];
-        // start the second group of queries
-        startAsyncQueriesPart2(currentUri);
-        return;
-    }
-    // if all queries have finished in the second group call the first group with the next URI
-    if (readyFlags['T44DDC'] && readyFlags['T44GND'] && readyFlags['T44RVK'] && readyFlags['T44SSG']) {
-        // reset ready flags
-        readyFlags['T44DDC'] = false;
-        readyFlags['T44GND'] = false;
-        readyFlags['T44RVK'] = false;
-        readyFlags['T44SSG'] = false;
         // increase index
         index++;
         // increase global index
@@ -375,7 +262,7 @@ function syncCallback() {
             // get current URI
             var currentUri = URIs[index];
             // start the first group of queries
-            startAsyncQueriesPart0(currentUri);
+            startAsyncQueries(currentUri);
             return;
         }
         else {
@@ -414,7 +301,7 @@ function syncCallback() {
         // get current URI
         var currentUri = URIs[index];
         // start the first group of queries
-        startAsyncQueriesPart0(currentUri);
+        startAsyncQueries(currentUri);
         return;
     }
 }
