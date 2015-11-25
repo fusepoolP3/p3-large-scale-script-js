@@ -46,7 +46,7 @@ var resourceFolder = 'sparql';
 // file names
 var files = {
     T0: 'T0_select-all-GND-IDs-(milos).rq',
-    T3: 'T3-new_data-from-DBpedia-(milos)-insert.rq'
+    T3: 'T3_data-from-DBpedia-(milos)-insert.rq'
 };
 // relative file paths
 var filePaths = {
