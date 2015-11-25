@@ -3,6 +3,9 @@
 # Variable: <http://d-nb.info/gnd/118529692> (should be a parameter)
 # It denotes both (a) an RDF Graph in the INSERT statement, and (b) a specific GND-ID being selected from the GND dataset
 
+# Variable: 118529692 (should be a parameter)
+# It denotes a specific GND-ID being selected from the DBpedia dataset
+
 PREFIX dbo: <http://dbpedia.org/ontology/>
 PREFIX gndo: <http://d-nb.info/standards/elementset/gnd#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
